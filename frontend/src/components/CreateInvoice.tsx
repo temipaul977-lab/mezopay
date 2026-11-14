@@ -111,11 +111,13 @@ function InvoiceComposer() {
             <span className="input-suffix"><span className="token-mini">$</span>MUSD</span></div>
           <p id="amount-hint" className="mt-2 text-xs text-slate-400">Paid in MUSD tokens, not BTC. You receive the full amount.</p>
         </div>
-        <div><label htmlFor="invoice-memo" className="field-label">Memo / Notes <span className="ml-1 font-normal text-slate-500">(optional)</span></label>
+        <details className="memo-details" open={memo ? true : undefined}><summary>Add a note<span>Optional</span><ChevronDown size={16} /></summary>
+        <div><label htmlFor="invoice-memo" className="field-label">Memo / Notes</label>
           <textarea id="invoice-memo" className="input-field min-h-24 resize-y" placeholder="Add a reference or payment details" maxLength={2000} aria-describedby="memo-hint"
             value={memo} onChange={(event) => setMemo(event.target.value)} disabled={transaction.busy} />
-          <p id="memo-hint" className="mt-2 text-xs text-slate-400">Invoice titles and notes are public. Do not include private information.</p>
         </div>
+        </details>
+        <p id="memo-hint" className="privacy-note">Invoice titles and notes are public. Do not include private information.</p>
         {(formError || transaction.error) && <ErrorNotice>{formError || transaction.error}</ErrorNotice>}
         {!isConnected ? <div className="connect-prompt"><WalletButton /><span>Connect your wallet to create a payment link.</span></div> : <>
           {wrongChain && <p className="text-sm text-amber-300">Switch to Mezo Testnet using the wallet controls above.</p>}
@@ -134,7 +136,7 @@ function InvoiceComposer() {
     <details ref={preview} className="preview-details rounded-2xl">
     <summary>Preview your invoice<ChevronDown size={18} /></summary>
     <aside className="preview-column" aria-label="Invoice preview">
-      <div className="preview-label"><span className="h-1.5 w-1.5 rounded-full bg-bitcoin" />LIVE PREVIEW<span className="ml-auto">YOUR CLIENT&apos;S VIEW</span></div>
+      <p className="preview-label">Your client will see this payment request.</p>
       <div className="receipt-preview">
         <div className="flex items-center justify-between"><div className="flex items-center gap-2 text-sm font-semibold"><span className="token-logo">m</span>MezoPay</div><span className="preview-pill">PAYMENT REQUEST</span></div>
         <div className="my-7 border-t border-dashed border-white/10" />

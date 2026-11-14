@@ -13,11 +13,12 @@ export function WalletBalance() {
     query: { enabled: !!address && isConnected, refetchInterval: 15_000 },
   });
 
+  if (!isConnected || !address) return null;
+
   return <section className="wallet-balance rounded-2xl" aria-label="Your MUSD balance">
     <div className="balance-copy"><p>MUSD wallet balance <span className="balance-network">Mezo Testnet</span></p>
-      {isConnected && address ? balance.isError ? <div className="balance-unavailable">Balance unavailable<button onClick={() => void balance.refetch()}>Retry</button></div>
-        : <div className="balance-value"><span>{balance.data === undefined ? "…" : musdAmount(balance.data)}</span><span>MUSD</span></div>
-        : <div className="balance-disconnected">Connect to view your MUSD</div>}
+      {balance.isError ? <div className="balance-unavailable">Balance unavailable<button onClick={() => void balance.refetch()}>Retry</button></div>
+        : <div className="balance-value"><span>{balance.data === undefined ? "…" : musdAmount(balance.data)}</span><span>MUSD</span></div>}
     </div>
     <span className="balance-symbol" aria-hidden="true">M</span>
   </section>;

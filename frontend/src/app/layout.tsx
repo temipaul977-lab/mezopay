@@ -16,7 +16,7 @@ export const viewport: Viewport = { themeColor: "#0B0F19", viewportFit: "cover" 
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return <html lang="en"><body>
-    <Providers><div className="app-shell mx-auto min-h-screen pb-24">
+    <Providers><div className="app-shell min-h-screen">
       <a className="skip-link" href="#main">Skip to content</a>
       <Navbar /><TransactionActivity />{children}<Footer /><BottomNav />
     </div></Providers>

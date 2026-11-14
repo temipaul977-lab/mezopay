@@ -6,9 +6,9 @@ export const metadata: Metadata = { title: "My Invoices" };
 
 export default function InvoicesPage() {
   return <main id="main" className="page-shell">
-    <section className="hero" aria-labelledby="invoices-heading">
+    <div className="workspace-header"><section className="hero" aria-labelledby="invoices-heading">
       <h1 id="invoices-heading">My invoices</h1><p>Payment requests and MUSD payments for your connected wallet.</p>
-    </section>
-    <WalletBalance /><InvoiceDashboard />
+    </section><WalletBalance /></div>
+    <InvoiceDashboard />
   </main>;
 }

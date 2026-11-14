@@ -78,7 +78,7 @@ async function clickText(text) {
   const found=await until(()=>evaluate(`(()=>{const e=[...document.querySelectorAll('button,a,summary')].find(e=>e.getClientRects().length&&e.textContent.trim()===${JSON.stringify(text)});if(!e||e.disabled)return false;e.click();return true})()`), 'click '+text);
   return found;
 }
-async function fill(id,value) { await evaluate(`(()=>{const e=document.getElementById(${JSON.stringify(id)});Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event('input',{bubbles:true}));})()`); }
+async function fill(id,value) { await evaluate(`(()=>{const e=document.getElementById(${JSON.stringify(id)});const prototype=e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(prototype,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event('input',{bubbles:true}));})()`); }
 async function page(url) { await cdp('Page.navigate',{url:'http://127.0.0.1:3100'+url});await until(()=>evaluate('document.readyState === "complete"'),'page ready');await sleep(450); }
 async function checkText(text) { return until(()=>evaluate(`document.body.innerText.includes(${JSON.stringify(text)})`), text); }
 async function screenshot(name) { const shot=await cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync(path.join('.qa',name+'.png'),Buffer.from(shot.data,'base64')); }
@@ -89,7 +89,7 @@ async function screenshot(name) { const shot=await cdp('Page.captureScreenshot',
     try { const r=await fetch(`http://127.0.0.1:${port}`,{signal:AbortSignal.timeout(1000)}); if(r) throw new Error(`QA port ${port} is in use`); }
     catch(error) { if(error.message.startsWith('QA port')) throw error; }
   }
-  server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','-p','3100'],{windowsHide:true,stdio:'pipe'});
+  server=spawn(process.execPath,['node_modules/next/dist/bin/next',process.env.QA_DEV?'dev':'start','-p','3100'],{windowsHide:true,stdio:'pipe'});
   await until(async()=>{try{return (await fetch('http://127.0.0.1:3100')).ok;}catch{return false;}},'Next server',30000);
   const browserPath=process.env.BROWSER_BIN ?? (process.platform==='win32'?'C:/Program Files/Google/Chrome/Application/chrome.exe':process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':'/usr/bin/chromium');
   if(!fs.existsSync(browserPath)) throw new Error('Set BROWSER_BIN to an installed Chrome or Chromium executable.');
@@ -129,14 +129,26 @@ async function screenshot(name) { const shot=await cdp('Page.captureScreenshot',
   await cdp('Page.enable');await cdp('Runtime.enable');await cdp('Runtime.addBinding',{name:'__testSendTransaction'});
   await cdp('Fetch.enable',{patterns:[{urlPattern:'https://rpc.test.mezo.org/*'}]});
   await cdp('Page.addScriptToEvaluateOnNewDocument',{source:`(()=>{let connected=sessionStorage.getItem('__testConnected')==='1',chain='0x7b7b',id=0;const listeners={};window.__setChain=c=>{chain=c;(listeners.chainChanged??[]).forEach(f=>f(c));};window.__walletRequests={};window.ethereum={isMetaMask:true,on:(e,f)=>(listeners[e]??=[]).push(f),removeListener:(e,f)=>{listeners[e]=(listeners[e]??[]).filter(x=>x!==f)},request:async({method,params})=>{if(method==='eth_chainId')return chain;if(method==='eth_accounts')return connected?['${account}']:[];if(method==='eth_requestAccounts'){connected=true;sessionStorage.setItem('__testConnected','1');return ['${account}'];}if(method==='wallet_switchEthereumChain'){window.__setChain(params[0].chainId);return null;}if(method==='wallet_requestPermissions')return [{parentCapability:'eth_accounts'}];if(method==='wallet_getPermissions')return connected?[{parentCapability:'eth_accounts'}]:[];if(method==='eth_sendTransaction'){if(window.__rejectNext){window.__rejectNext=false;throw Object.assign(new Error('User declined'),{code:4001});}return new Promise(resolve=>{const n=++id;window.__walletRequests[n]=resolve;window.__testSendTransaction(JSON.stringify({id:n,tx:params[0]}));});}throw Object.assign(new Error('Unsupported '+method),{code:-32601});}};})();`});
+  if(process.env.QA_VIEW_ONLY) {
+    for(const [name,width,height] of [['desktop',1440,960],['mobile',390,844]]) {
+      await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<768});
+      await page('/');await checkText('New invoice');
+      assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'),true,`${name} overflow`);
+      assert.equal(await evaluate('Math.round(document.querySelector(".app-shell").getBoundingClientRect().width) === document.documentElement.clientWidth'),true,`${name} shell fills viewport`);
+      await screenshot((process.env.QA_PREFIX??'view')+'-'+name);
+    }
+    console.log('Browser screenshots captured.');return;
+  }
   await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   await page('/');await checkText('New invoice');
   assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'),true,'mobile overflow');
   await fill('invoice-title','Audit');await fill('invoice-amount','25');
+  await evaluate('document.querySelector(".memo-details summary").click()');await fill('invoice-memo','Project reference 2026');
   await clickText('My Invoices');await checkText('Invoice history');
   await evaluate('document.getElementById("created-tab").focus()');await cdp('Input.dispatchKeyEvent',{type:'keyDown',key:'ArrowRight',code:'ArrowRight'});await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:'ArrowRight',code:'ArrowRight'});
   assert.equal(await evaluate('document.getElementById("paid-tab").getAttribute("aria-selected")'),'true','keyboard tab navigation');
   await clickText('New Invoice');await until(()=>evaluate('document.getElementById("invoice-title")?.value === "Audit"'),'draft retained');
+  assert.equal(await evaluate('document.getElementById("invoice-memo").value'),'Project reference 2026','optional note retained');
   await screenshot('mobile');
   await page('/pay/42');await checkText('Design sprint');await checkText('Connect to pay');assert.equal(state.sent,0,'public invoice read needs no wallet');await page('/');
   await clickText('Connect wallet');await checkText('Browser wallet');await clickText('Browser wallet');await until(()=>evaluate('!document.querySelector("dialog[open]")'),'wallet connected');
@@ -159,12 +171,16 @@ async function screenshot(name) { const shot=await cdp('Page.captureScreenshot',
   await page('/pay/invalid');await checkText('That invoice ID');
   await cdp('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
   await page('/');assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'),true,'desktop overflow');
-  assert.equal(await evaluate('getComputedStyle(document.querySelector(".bottom-nav")).position'),'sticky');
+  assert.equal(await evaluate('getComputedStyle(document.querySelector(".bottom-nav")).position'),'fixed');
+  assert.equal(await evaluate('Math.round(document.querySelector(".app-shell").getBoundingClientRect().width) === document.documentElement.clientWidth'),true,'desktop shell fills viewport');
   await screenshot('desktop');
-  await cdp('Emulation.setDeviceMetricsOverride',{width:320,height:740,deviceScaleFactor:1,mobile:true});
-  assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'),true,'320px overflow');
+  for(const width of [320,768,1920]) {
+    await cdp('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width<1024});
+    assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'),true,`${width}px overflow`);
+    assert.equal(await evaluate('Math.round(document.querySelector(".app-shell").getBoundingClientRect().width) === document.documentElement.clientWidth'),true,`${width}px shell fills viewport`);
+  }
   assert.deepEqual(errors,[],'browser exceptions');
-  console.log('PASS browser: 320/390/1280px layout, navigation, persistent draft, public invoice reads, wallet selection, invalid amounts, rejected signature, pending reload recovery, network switch, insufficient balance, approval+payment, double-pay prevention, stale receipt preservation, invalid ID, no browser exceptions.');
+  console.log('PASS browser: 320/390/768/1280/1920px layouts, full-viewport shell, navigation, persistent draft, public invoice reads, wallet selection, invalid amounts, rejected signature, pending reload recovery, network switch, insufficient balance, approval+payment, double-pay prevention, stale receipt preservation, invalid ID, no browser exceptions.');
 })().catch(async error=>{console.error(error);console.error('RPC/browser errors:',errors);if(socket?.readyState===1){try{console.log(await evaluate('document.body.innerText'));await screenshot('failure');}catch{}}process.exitCode=1;}).finally(async()=>{
   if(socket?.readyState===1){try{await cdp('Browser.close');}catch{}socket.close();}
   server?.kill();chrome?.kill();
