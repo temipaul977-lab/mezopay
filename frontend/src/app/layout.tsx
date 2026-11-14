@@ -1,0 +1,17 @@
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { Providers } from "./providers";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: { default: "MezoPay — Bitcoin-backed MUSD invoicing", template: "%s | MezoPay" },
+  description: "Create a MUSD invoice. Share a payment link. Get paid directly on Mezo Testnet, with zero protocol fees.",
+};
+
+export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  return <html lang="en"><body>
+    <Providers><a className="skip-link" href="#main">Skip to content</a><Navbar />{children}<Footer /></Providers>
+  </body></html>;
+}
