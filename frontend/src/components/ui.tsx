@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowUpRight, Check, Copy, Loader2 } from "lucide-react";
 import { EXPLORER_URL } from "@/config/wagmi";
 
@@ -10,7 +10,7 @@ export function Spinner() {
 
 export function StatusBadge({ paid }: { paid: boolean }) {
   return <span className={`status ${paid ? "status-paid" : "status-pending"}`}>
-    <span className="h-1.5 w-1.5 rounded-full bg-current" />{paid ? "PAID" : "PENDING"}
+    <span className="h-1.5 w-1.5 rounded-full bg-current" />{paid ? "Paid" : "Unpaid"}
   </span>;
 }
 
@@ -30,12 +30,15 @@ export function ExplorerLink({ value, type = "tx", children, className = "" }: {
 export function CopyButton({ value, label = "Copy link" }: { value: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => clearTimeout(timer.current), []);
   async function copy() {
     try {
       await navigator.clipboard.writeText(value);
       setFailed(false);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 2500);
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 2500);
     } catch {
       setFailed(true);
     }
@@ -45,7 +48,7 @@ export function CopyButton({ value, label = "Copy link" }: { value: string; labe
       {copied ? <Check size={15} /> : <Copy size={15} />}{copied ? "Copied!" : label}
     </button>
     <span className="sr-only" role="status">{copied ? "Copied to clipboard" : ""}</span>
-    {failed && <p role="alert" className="mt-2 text-xs text-amber-300">Copy unavailable. Select and copy the link manually.</p>}
+    {failed && <div role="alert" className="mt-2 text-xs text-amber-300"><p>Clipboard unavailable. Select and copy this value:</p><input className="input-field mt-2" readOnly aria-label="Value to copy" value={value} onFocus={(event) => event.target.select()} /></div>}
   </div>;
 }
 

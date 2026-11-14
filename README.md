@@ -31,6 +31,7 @@ Open [localhost:3000](http://localhost:3000). On macOS/Linux, use `npm` in place
 
 ```powershell
 npm.cmd run typecheck
+npm.cmd test
 npm.cmd run build
 npm.cmd start
 ```
@@ -62,7 +63,7 @@ frontend/
   src/contracts/
     MezoPayInvoices.json        Phase 1 deployment artifact and exact ABI
     abis.ts                     Artifact ABI with typed viem signatures; MUSD ABI
-  src/hooks/useTransaction.ts   Wallet submission, receipts, cache invalidation
+  src/hooks/useTransaction.tsx  Shared transaction tracking and reload recovery
   src/lib/invoices.ts           Bigint amount/ID validation and display helpers
 contracts/                      Existing Phase 1 Hardhat project (unchanged)
 ```
@@ -82,3 +83,15 @@ The deployed contract was compiled in Phase 1 with Solidity 0.8.24 and `evmVersi
 - Reopen a paid link, try an invalid/missing ID, reject a signature, and switch the connected wallet to another chain to check the recovery states.
 
 Full TypeScript checking and a production build require installed frontend dependencies. Network-restricted environments can prepare all source/config files without installing; run the validation commands above once package downloads are available.
+
+## Frontend UX and regression checks
+
+The UI uses native system fonts and exact decimal token amounts. Phones use a bottom navigation bar and wallet selection sheet. At desktop widths the app expands into a workspace with side navigation and an invoice preview. **My Invoices** is available at `/invoices`.
+
+Invoice drafts and submitted transaction hashes are kept in session storage for the current browser tab. Pending confirmations survive app navigation and page reloads; an unknown confirmation status blocks another submission until it is checked. Confirmed receipts must contain the expected contract event, payer/creator, and invoice ID. These records contain no private keys. If browser storage is disabled, tracking still survives in-app navigation, but cannot survive a reload.
+
+`npm test` checks decimal precision, invalid IDs, transaction restoration data, rejected wallet requests, and receipt identity. After `npm run build`, run `npm run test:browser` for browser regression checks with a **simulated injected wallet and RPC**. The browser suite checks mobile/desktop layouts, keyboard navigation, draft retention, transaction recovery after reload, approval/payment, insufficient balance, wrong-network recovery, and stale-read handling. It does not submit live transactions.
+
+The browser suite uses an installed Chrome/Chromium, Node.js 22+, and free local ports 3100 and 9227. Set `BROWSER_BIN` if Chrome is not in its default location. It creates an isolated browser profile and screenshots under ignored `frontend/.qa/`, starts its own production server, and closes both after the checks. Its isolated headless browser runs without the Chrome sandbox to support restricted development environments; it only visits the local test app. The test fixture is confined to `frontend/test/` and is not included in production application code.
+
+See [the frontend review](frontend/REVIEW.md) for the findings, research sources, and verification limits.

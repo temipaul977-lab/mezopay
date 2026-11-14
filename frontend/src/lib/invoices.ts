@@ -1,4 +1,4 @@
-import { BaseError, formatUnits, parseUnits, type Address } from "viem";
+import { BaseError, UserRejectedRequestError, formatUnits, parseUnits, type Address } from "viem";
 
 export type Invoice = {
   id: bigint;
@@ -23,7 +23,7 @@ export function musdAmount(amount: bigint) {
 
 export function parseMusd(input: string): bigint {
   const value = input.trim();
-  if (!/^\d+(\.\d{1,18})?$/.test(value)) {
+  if (value.length > 100 || !/^\d+(\.\d{1,18})?$/.test(value)) {
     throw new Error("Enter a positive MUSD amount with at most 18 decimal places.");
   }
   const amount = parseUnits(value, 18);
@@ -40,7 +40,12 @@ export function parseInvoiceId(value: string): bigint | null {
 }
 
 export function errorMessage(error: unknown): string {
-  if (error instanceof BaseError) return error.shortMessage;
+  if (error instanceof BaseError) {
+    if (error.walk((cause) => cause instanceof UserRejectedRequestError) instanceof UserRejectedRequestError) {
+      return "Request declined in your wallet. Nothing was submitted. You can try again when ready.";
+    }
+    return error.shortMessage;
+  }
   if (error instanceof Error) return error.message;
   return "Something went wrong. Please try again.";
 }
@@ -49,5 +54,5 @@ export function invoiceDate(timestamp: bigint) {
   const date = new Date(Number(timestamp) * 1000);
   return Number.isNaN(date.getTime())
     ? "Unknown date"
-    : date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    : date.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
 }
