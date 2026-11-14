@@ -38,7 +38,7 @@ export function Checkout({ invoiceId }: { invoiceId: string }) {
   return <div className="checkout-shell">
     <Link href="/" className="back-link"><ArrowLeft size={15} />Back to MezoPay</Link>
     <div className="mb-7 mt-8 text-center"><p className="eyebrow text-bitcoin">A SIMPLE WAY TO SETTLE UP</p><h1 className="mt-3 text-3xl font-semibold tracking-tight">{invoice.paid ? "All settled." : "You’re one payment away."}</h1><p className="mt-3 text-sm text-slate-400">Your invoice. Your wallet. Direct on Mezo.</p></div>
-    <article className="checkout-receipt" aria-labelledby="invoice-title">
+    <article className="checkout-receipt rounded-2xl" aria-labelledby="invoice-title">
       <div className={`receipt-topline ${invoice.paid ? "bg-mint" : "bg-bitcoin"}`} />
       <div className="receipt-body">
         <div className="flex flex-wrap items-center justify-between gap-3"><span className="inline-flex items-center gap-2 font-mono text-xs text-slate-400"><FileText size={16} />INVOICE #{invoice.id.toString().padStart(4, "0")}</span>

@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowRight, Check, CheckCheck, FilePlus2, Link2, LockKeyhole, Send, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCheck, ChevronDown, FilePlus2, Link2, LockKeyhole } from "lucide-react";
 import { parseEventLogs } from "viem";
 import { useAccount, useWriteContract } from "wagmi";
 import { MEZOPAY_ADDRESS, mezoTestnet } from "@/config/wagmi";
@@ -63,11 +63,10 @@ function InvoiceComposer() {
   }
 
   return <section id="create" className="composer-grid" aria-labelledby="create-heading">
-    <div className="panel composer-panel">
+    <div className="panel composer-panel rounded-2xl">
       <div className="panel-heading">
         <span className="icon-tile"><FilePlus2 size={20} /></span>
-        <div><h2 id="create-heading">Create an invoice</h2><p>A few details. One simple payment link.</p></div>
-        <span className="ml-auto hidden text-xs text-slate-500 sm:block">01 / CREATE</span>
+        <div><h2 id="create-heading">Payment details</h2><p>One simple link. Straight to your wallet.</p></div>
       </div>
       {created ? <div className="space-y-6 py-2" role="status">
         <div className="success-orb"><CheckCheck size={30} /></div>
@@ -116,7 +115,9 @@ function InvoiceComposer() {
         <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500"><LockKeyhole size={12} />Non-custodial. Zero protocol fees. BTC network gas applies.</p>
       </form>}
     </div>
-    <aside className="preview-column" aria-label="Invoice preview and how it works">
+    <details className="preview-details rounded-2xl">
+    <summary>Preview your invoice<ChevronDown size={18} /></summary>
+    <aside className="preview-column" aria-label="Invoice preview">
       <div className="preview-label"><span className="h-1.5 w-1.5 rounded-full bg-bitcoin" />LIVE PREVIEW<span className="ml-auto">YOUR CLIENT&apos;S VIEW</span></div>
       <div className="receipt-preview">
         <div className="flex items-center justify-between"><div className="flex items-center gap-2 text-sm font-semibold"><span className="token-logo">m</span>MezoPay</div><span className="preview-pill">PAYMENT REQUEST</span></div>
@@ -131,13 +132,7 @@ function InvoiceComposer() {
         <div className="preview-pay"><LockKeyhole size={14} />Pay securely with MUSD<ArrowRight size={15} /></div>
         <p className="mt-3 text-center text-[10px] text-slate-500">Preview only · Your live invoice is created onchain</p>
       </div>
-      <div className="how-it-works">
-        <div className="flex items-center gap-2"><ShieldCheck size={17} className="text-mint" /><h3 className="text-sm font-medium text-slate-200">From your work to your wallet.</h3></div>
-        <div className="mt-5 flex items-center justify-between gap-2">
-          {[{ icon: FilePlus2, text: "Create invoice" }, { icon: Send, text: "Share your link" }, { icon: Check, text: "Get paid" }].map(({ icon: Icon, text }, i) =>
-            <div key={text} className="flex items-center gap-3"><div className="flex flex-col items-center gap-2"><span className="step-icon"><Icon size={16} /></span><span className="text-[10px] text-slate-400">{text}</span></div>{i < 2 && <ArrowDown size={13} className="-rotate-90 text-slate-600" />}</div>)}
-        </div>
-      </div>
     </aside>
+    </details>
   </section>;
 }

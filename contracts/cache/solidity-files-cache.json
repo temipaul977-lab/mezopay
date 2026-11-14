@@ -1,0 +1,78 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "C:\\Users\\Owner\\Desktop\\MezoPay\\contracts\\contracts\\MezoPayInvoices.sol": {
+      "lastModificationDate": 1794658156227,
+      "contentHash": "7135151da26499070a188b9ea494c7d4",
+      "sourceName": "contracts/MezoPayInvoices.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "london",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.24"
+      ],
+      "artifacts": [
+        "IERC20",
+        "MezoPayInvoices"
+      ]
+    },
+    "C:\\Users\\Owner\\Desktop\\MezoPay\\contracts\\contracts\\test\\MockERC20.sol": {
+      "lastModificationDate": 1794658165841,
+      "contentHash": "8d71094f7da1d7efefc3912365225a59",
+      "sourceName": "contracts/test/MockERC20.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "london",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.24"
+      ],
+      "artifacts": [
+        "MockERC20"
+      ]
+    }
+  }
+}
